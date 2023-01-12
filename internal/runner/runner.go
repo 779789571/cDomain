@@ -16,6 +16,7 @@ type Targets struct {
 	Name		[]string
 }
 
+
 func GetDomainByKey(options *Options) []string {
 	var domains []string
 	gologger.Infof("正在查询关键字 %s\n",options.KeyWord)
@@ -43,6 +44,7 @@ func GetDomainByID(options *Options) []string {
 
 func RunEnumeration(options *Options) {
 	var domains []string
+	var copyrights []string //新增查询软件著作
 	if options.InputFile != "" {
 		fin, error := os.OpenFile(options.InputFile, os.O_RDONLY, 0)
 		if error != nil {
@@ -54,6 +56,7 @@ func RunEnumeration(options *Options) {
 		for _,id := range targets.ID {
 			options.CompanyID = id
 			domains = append(domains,GetDomainByID(options)...)
+			copyrights = append(copyrights,GetsoftwareCopyrights(options)...)
 		}
 		for _,name := range targets.Name {
 			options.KeyWord = name
@@ -64,6 +67,7 @@ func RunEnumeration(options *Options) {
 			domains = GetDomainByKey(options)
 		} else if options.CompanyID != "" {
 			domains = GetDomainByID(options)
+			copyrights = append(copyrights,GetsoftwareCopyrights(options)...)
 		}
 	}
 
@@ -73,6 +77,10 @@ func RunEnumeration(options *Options) {
 	}
 	for _,domain := range results.Domains {
 		fmt.Println(domain)
+	}
+	fmt.Printf("共计软著%d个\n", len(copyrights))
+	for _,copyrightsinfo := range copyrights {
+		fmt.Println(copyrightsinfo)
 	}
 	if options.Output != "" {
 		file, err := os.OpenFile(options.Output, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -84,6 +92,19 @@ func RunEnumeration(options *Options) {
 		for _,domain := range results.Domains {
 			file.WriteString(domain+"\n")
 		}
+
+	}
+	if options.Output != "" {
+		file, err := os.OpenFile("copyrightsFor"+options.Output, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			gologger.Fatalf("结果无法写入文件：%s", err)
+		}
+		defer file.Close()
+
+		for _,copyrightsinfo := range copyrights {
+			file.WriteString(copyrightsinfo+"\n")
+		}
+
 	}
 }
 

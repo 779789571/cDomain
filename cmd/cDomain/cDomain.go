@@ -6,7 +6,6 @@ import (
 
 func main() {
 	options := runner.ParseOptions()
-
 	runner.RunEnumeration(options)
 }
 
